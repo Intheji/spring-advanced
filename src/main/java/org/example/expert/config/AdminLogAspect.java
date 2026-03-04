@@ -28,20 +28,31 @@ public class AdminLogAspect {
         Long userId = (Long) request.getAttribute("userId");
         String url = request.getRequestURI();
         String method = request.getMethod();
-        LocalDateTime now = LocalDateTime.now();
 
-        String requestBody = Arrays.toString(joinPoint.getArgs());
+        String params = Arrays.toString(joinPoint.getArgs());
+        long start = System.currentTimeMillis();
+        LocalDateTime startAt = LocalDateTime.now();
 
-        log.info("(Admin req) userId={} time={} method={} url={} body={}",
-                userId, now, method, url, requestBody);
 
-        Object result = joinPoint.proceed();
+        log.info("[ADMIN API 요청] userId={} time={} method={} url={} params={}",
+                userId, startAt, method, url, params);
 
-        String responseBody = String.valueOf(result);
+        try {
+            Object result = joinPoint.proceed();
 
-        log.info("(Admin res) userId={} time={} method={} url={} body={}",
-                userId, LocalDateTime.now(), method, url, responseBody);
+            long durationMs = System.currentTimeMillis() - start;
 
-        return result;
+            log.info("[ADMIN API 응답] userId={} time={} method={} url={} params={} durationMs={}",
+                    userId, LocalDateTime.now(), method, url, params, durationMs);
+
+            return result;
+        } catch (Exception e) {
+            long durationMs = System.currentTimeMillis() - start;
+
+            log.warn("[ADMIN API 에러] userId={} time={} method={} url={} durationMs={} ex={} msg={}",
+                    userId, LocalDateTime.now(), method, url, durationMs, e.getClass().getSimpleName(), e.getMessage());
+
+            throw e;
+        }
     }
 }
