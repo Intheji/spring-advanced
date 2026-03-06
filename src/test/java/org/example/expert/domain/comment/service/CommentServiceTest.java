@@ -1,6 +1,7 @@
 package org.example.expert.domain.comment.service;
 
 import org.example.expert.domain.comment.dto.request.CommentSaveRequest;
+import org.example.expert.domain.comment.dto.response.CommentResponse;
 import org.example.expert.domain.comment.dto.response.CommentSaveResponse;
 import org.example.expert.domain.comment.entity.Comment;
 import org.example.expert.domain.comment.repository.CommentRepository;
@@ -70,5 +71,25 @@ class CommentServiceTest {
 
         // then
         assertNotNull(result);
+    }
+
+    @Test
+    public void comment_목록을_정상적으로_조회한다() {
+        // given
+        long todoId = 1L;
+
+        User user = new User("user1@example.com", "password", UserRole.USER);
+        Comment comment = new Comment("댓글 내용", user, null);
+
+        given(commentRepository.findByTodoIdWithUser(todoId)).willReturn(java.util.List.of(comment));
+
+        // when
+        java.util.List<CommentResponse> result = commentService.getComments(todoId);
+
+        // then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("댓글 내용", result.get(0).getContents());
+        assertEquals("user1@example.com", result.get(0).getUser().getEmail());
     }
 }
