@@ -5,6 +5,7 @@ import org.example.expert.client.WeatherClient;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.common.exception.InvalidRequestException;
 import org.example.expert.domain.todo.dto.request.TodoSaveRequest;
+import org.example.expert.domain.todo.dto.request.TodoUpdateRequest;
 import org.example.expert.domain.todo.dto.response.TodoResponse;
 import org.example.expert.domain.todo.dto.response.TodoSaveResponse;
 import org.example.expert.domain.todo.entity.Todo;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -80,5 +82,17 @@ public class TodoService {
                 todo.getCreatedAt(),
                 todo.getModifiedAt()
         );
+    }
+
+    @Transactional
+    public void updateTodo(AuthUser authUser, long todoId, TodoUpdateRequest todoUpdateRequest) {
+        Todo todo = todoRepository.findByIdWithUser(todoId)
+                .orElseThrow(() -> new InvalidRequestException("Todo not found"));
+
+        if (todo.getUser() == null || !ObjectUtils.nullSafeEquals(todo.getUser().getId(), authUser.getId())) {
+            throw new InvalidRequestException("해당 일정을 수정할 권한이 없습니다.");
+        }
+
+        todo.update(todoUpdateRequest.getTitle(), todoUpdateRequest.getContents());
     }
 }

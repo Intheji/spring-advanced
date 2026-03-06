@@ -2,6 +2,7 @@ package org.example.expert.domain.comment.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.expert.domain.comment.dto.request.CommentSaveRequest;
+import org.example.expert.domain.comment.dto.request.CommentUpdateRequest;
 import org.example.expert.domain.comment.dto.response.CommentResponse;
 import org.example.expert.domain.comment.dto.response.CommentSaveResponse;
 import org.example.expert.domain.comment.entity.Comment;
@@ -14,6 +15,7 @@ import org.example.expert.domain.user.dto.response.UserResponse;
 import org.example.expert.domain.user.entity.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -61,5 +63,17 @@ public class CommentService {
             dtoList.add(dto);
         }
         return dtoList;
+    }
+
+    @Transactional
+    public void updateComment(AuthUser authUser, long commentId, CommentUpdateRequest commentUpdateRequest) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new InvalidRequestException("Comment not found"));
+
+        if (comment.getUser() == null || !ObjectUtils.nullSafeEquals(comment.getUser().getId(), authUser.getId())) {
+            throw new InvalidRequestException("댓글을 수정할 권한이 없습니다.");
+        }
+
+        comment.update(commentUpdateRequest.getContents());
     }
 }
